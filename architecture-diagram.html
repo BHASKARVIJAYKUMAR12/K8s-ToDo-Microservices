@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo App Microservices Architecture</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .title {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 40px;
+        font-size: 2.5em;
+        font-weight: bold;
+      }
+
+      .architecture {
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr;
+        gap: 30px;
+        align-items: start;
+        position: relative;
+      }
+
+      .user-layer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .service-layer {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+      }
+
+      .data-layer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .layer-title {
+        font-size: 1.4em;
+        font-weight: bold;
+        color: #34495e;
+        text-align: center;
+        margin-bottom: 15px;
+        padding: 10px;
+        background: #ecf0f1;
+        border-radius: 10px;
+        width: 100%;
+      }
+
+      .component {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border: 3px solid;
+        position: relative;
+        transition: transform 0.3s ease;
+      }
+
+      .component:hover {
+        transform: translateY(-5px);
+      }
+
+      .user {
+        border-color: #e74c3c;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        color: white;
+      }
+      .frontend {
+        border-color: #61dafb;
+        background: linear-gradient(135deg, #61dafb, #21d4fd);
+        color: white;
+      }
+      .gateway {
+        border-color: #f39c12;
+        background: linear-gradient(135deg, #f39c12, #f1c40f);
+        color: white;
+      }
+      .microservice {
+        border-color: #2ecc71;
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+      }
+      .database {
+        border-color: #9b59b6;
+        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        color: white;
+      }
+      .cache {
+        border-color: #e67e22;
+        background: linear-gradient(135deg, #e67e22, #d35400);
+        color: white;
+      }
+
+      .component-title {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+
+      .component-tech {
+        font-size: 0.9em;
+        opacity: 0.9;
+        margin-bottom: 5px;
+      }
+
+      .component-port {
+        font-size: 0.8em;
+        opacity: 0.8;
+      }
+
+      .arrow {
+        position: absolute;
+        font-size: 1.5em;
+        color: #34495e;
+        font-weight: bold;
+      }
+
+      .workflow-arrow {
+        position: absolute;
+        z-index: 10;
+      }
+
+      .arrow-line {
+        stroke: #3498db;
+        stroke-width: 3;
+        fill: none;
+        marker-end: url(#arrowhead);
+      }
+
+      .arrow-label {
+        background: #3498db;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: bold;
+        position: absolute;
+        white-space: nowrap;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      .bidirectional-arrow {
+        stroke: #e74c3c;
+        stroke-width: 2;
+        fill: none;
+        stroke-dasharray: 5, 5;
+      }
+
+      .microservices-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .gateway-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+      }
+
+      .data-flow {
+        margin-top: 40px;
+        padding: 25px;
+        background: #f8f9fa;
+        border-radius: 15px;
+        border-left: 5px solid #3498db;
+      }
+
+      .flow-title {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 15px;
+      }
+
+      .flow-steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+      }
+
+      .flow-step {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 4px solid #3498db;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .step-number {
+        background: #3498db;
+        color: white;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      .tech-stack {
+        margin-top: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+      }
+
+      .tech-item {
+        background: #34495e;
+        color: white;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: bold;
+      }
+
+      @media (max-width: 1200px) {
+        .architecture {
+          grid-template-columns: 1fr;
+          gap: 40px;
+        }
+
+        .microservices-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">🚀 Todo App Microservices Architecture</h1>
+
+      <!-- SVG for arrows -->
+      <svg
+        style="
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 1;
+        "
+      >
+        <defs>
+          <marker
+            id="arrowhead"
+            markerWidth="10"
+            markerHeight="7"
+            refX="9"
+            refY="3.5"
+            orient="auto"
+          >
+            <polygon points="0 0, 10 3.5, 0 7" fill="#3498db" />
+          </marker>
+        </defs>
+      </svg>
+
+      <div class="architecture">
+        <!-- User Layer -->
+        <div class="user-layer">
+          <div class="layer-title">👥 Client Layer</div>
+
+          <div class="component user" id="user-component">
+            <div class="component-title">👤 User</div>
+            <div class="component-tech">Web Browser</div>
+            <div class="component-port">HTTP/HTTPS</div>
+          </div>
+
+          <div class="component frontend" id="frontend-component">
+            <div class="component-title">🌐 Frontend</div>
+            <div class="component-tech">React + TypeScript</div>
+            <div class="component-port">Port: 3000</div>
+          </div>
+        </div>
+
+        <!-- Service Layer -->
+        <div class="service-layer">
+          <div class="layer-title">🔄 Service Layer</div>
+
+          <div class="gateway-container">
+            <div class="component gateway" id="gateway-component">
+              <div class="component-title">🚪 API Gateway</div>
+              <div class="component-tech">Node.js + Express</div>
+              <div class="component-port">Port: 8080</div>
+            </div>
+          </div>
+
+          <div class="microservices-grid">
+            <div class="component microservice" id="todo-service">
+              <div class="component-title">📝 Todo Service</div>
+              <div class="component-tech">Node.js + TypeScript</div>
+              <div class="component-port">Port: 3001</div>
+            </div>
+
+            <div class="component microservice" id="user-service">
+              <div class="component-title">👤 User Service</div>
+              <div class="component-tech">Node.js + TypeScript</div>
+              <div class="component-port">Port: 3002</div>
+            </div>
+
+            <div
+              class="component microservice"
+              id="notification-service"
+              style="grid-column: 1 / -1"
+            >
+              <div class="component-title">📢 Notification Service</div>
+              <div class="component-tech">Node.js + TypeScript</div>
+              <div class="component-port">Port: 3003</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Layer -->
+        <div class="data-layer">
+          <div class="layer-title">💾 Data Layer</div>
+
+          <div class="component database" id="postgres-component">
+            <div class="component-title">🐘 PostgreSQL</div>
+            <div class="component-tech">Primary Database</div>
+            <div class="component-port">Port: 5432</div>
+          </div>
+
+          <div class="component cache" id="redis-component">
+            <div class="component-title">⚡ Redis</div>
+            <div class="component-tech">Cache & Queue</div>
+            <div class="component-port">Port: 6379</div>
+          </div>
+        </div>
+
+        <!-- Workflow Arrows with Labels -->
+        <div
+          class="workflow-arrow"
+          style="position: absolute; top: 180px; left: 280px"
+        >
+          <div class="arrow-label">1. User Interaction</div>
+        </div>
+
+        <div
+          class="workflow-arrow"
+          style="position: absolute; top: 250px; left: 280px"
+        >
+          <div class="arrow-label">2. HTTP Requests</div>
+        </div>
+
+        <div
+          class="workflow-arrow"
+          style="position: absolute; top: 280px; left: 520px"
+        >
+          <div class="arrow-label">3. JWT Authentication</div>
+        </div>
+
+        <div
+          class="workflow-arrow"
+          style="position: absolute; top: 320px; left: 480px; margin-top: 30px"
+        >
+          <div class="arrow-label">4. Route to Services</div>
+        </div>
+
+        <div
+          class="workflow-arrow"
+          style="position: absolute; top: 370px; left: 680px"
+        >
+          <div class="arrow-label">5. SQL Queries</div>
+        </div>
+
+        <div
+          class="workflow-arrow"
+          style="position: absolute; top: 420px; left: 680px"
+        >
+          <div class="arrow-label">6. Cache & Queue</div>
+        </div>
+
+        <div
+          class="workflow-arrow"
+          style="position: absolute; top: 320px; left: 380px"
+        >
+          <div class="arrow-label">7. Real-time Events</div>
+        </div>
+
+        <div
+          class="workflow-arrow"
+          style="position: absolute; top: 250px; left: 420px"
+        >
+          <div class="arrow-label">8. Response Data</div>
+        </div>
+      </div>
+
+      <!-- Data Flow Section with Enhanced Workflow -->
+      <div class="data-flow">
+        <div class="flow-title">
+          📊 Detailed Application Workflow with Data Flow
+        </div>
+        <div
+          style="
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+          "
+        >
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 15px;
+              align-items: center;
+            "
+          >
+            <!-- Step 1 -->
+            <div style="text-align: center">
+              <div
+                style="
+                  background: #e74c3c;
+                  color: white;
+                  padding: 10px;
+                  border-radius: 10px;
+                  margin-bottom: 10px;
+                "
+              >
+                <strong>👤 User</strong><br />
+                <small>Browser Interaction</small>
+              </div>
+            </div>
+
+            <div style="text-align: center; color: #e74c3c; font-size: 2em">
+              →
+            </div>
+
+            <!-- Step 2 -->
+            <div style="text-align: center">
+              <div
+                style="
+                  background: #61dafb;
+                  color: white;
+                  padding: 10px;
+                  border-radius: 10px;
+                  margin-bottom: 10px;
+                "
+              >
+                <strong>🌐 Frontend</strong><br />
+                <small>React Components</small>
+              </div>
+            </div>
+
+            <div style="text-align: center; color: #61dafb; font-size: 2em">
+              →
+            </div>
+          </div>
+
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 15px;
+              align-items: center;
+              margin-top: 20px;
+            "
+          >
+            <!-- Step 3 -->
+            <div style="text-align: center">
+              <div
+                style="
+                  background: #f39c12;
+                  color: white;
+                  padding: 10px;
+                  border-radius: 10px;
+                  margin-bottom: 10px;
+                "
+              >
+                <strong>🚪 API Gateway</strong><br />
+                <small>Request Routing</small>
+              </div>
+            </div>
+
+            <div style="text-align: center; color: #f39c12; font-size: 2em">
+              ↓
+            </div>
+
+            <!-- Step 4 -->
+            <div style="text-align: center">
+              <div
+                style="
+                  background: #2ecc71;
+                  color: white;
+                  padding: 10px;
+                  border-radius: 10px;
+                  margin-bottom: 10px;
+                "
+              >
+                <strong>🔄 Microservices</strong><br />
+                <small>Business Logic</small>
+              </div>
+            </div>
+
+            <div style="text-align: center; color: #2ecc71; font-size: 2em">
+              →
+            </div>
+          </div>
+
+          <div
+            style="
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 30px;
+              align-items: center;
+              margin-top: 20px;
+            "
+          >
+            <!-- Step 5 -->
+            <div style="text-align: center">
+              <div
+                style="
+                  background: #9b59b6;
+                  color: white;
+                  padding: 10px;
+                  border-radius: 10px;
+                  margin-bottom: 10px;
+                "
+              >
+                <strong>🐘 PostgreSQL</strong><br />
+                <small>Data Persistence</small>
+              </div>
+            </div>
+
+            <!-- Step 6 -->
+            <div style="text-align: center">
+              <div
+                style="
+                  background: #e67e22;
+                  color: white;
+                  padding: 10px;
+                  border-radius: 10px;
+                  margin-bottom: 10px;
+                "
+              >
+                <strong>⚡ Redis</strong><br />
+                <small>Cache & Messaging</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-steps">
+          <div class="flow-step">
+            <span class="step-number">1</span>
+            <strong>User Interaction:</strong> User performs actions (login,
+            create todo, etc.) in React frontend
+          </div>
+          <div class="flow-step">
+            <span class="step-number">2</span>
+            <strong>API Request:</strong> Frontend sends HTTP requests
+            (GET/POST/PUT/DELETE) to API Gateway
+          </div>
+          <div class="flow-step">
+            <span class="step-number">3</span>
+            <strong>Authentication:</strong> API Gateway validates JWT tokens
+            via User Service before routing
+          </div>
+          <div class="flow-step">
+            <span class="step-number">4</span>
+            <strong>Route Request:</strong> Gateway routes authenticated
+            requests to appropriate microservice
+          </div>
+          <div class="flow-step">
+            <span class="step-number">5</span>
+            <strong>Data Processing:</strong> Todo/User services perform CRUD
+            operations on PostgreSQL database
+          </div>
+          <div class="flow-step">
+            <span class="step-number">6</span>
+            <strong>Caching:</strong> Redis stores session data, caches frequent
+            queries, and handles message queues
+          </div>
+          <div class="flow-step">
+            <span class="step-number">7</span>
+            <strong>Notifications:</strong> Notification service sends real-time
+            updates via Redis pub/sub
+          </div>
+          <div class="flow-step">
+            <span class="step-number">8</span>
+            <strong>Response:</strong> Data flows back through Gateway to
+            Frontend and renders in UI
+          </div>
+        </div>
+      </div>
+
+      <!-- Technology Stack -->
+      <div class="data-flow">
+        <div class="flow-title">🛠️ Technology Stack</div>
+        <div class="tech-stack">
+          <div class="tech-item">React 18</div>
+          <div class="tech-item">TypeScript</div>
+          <div class="tech-item">Node.js 18</div>
+          <div class="tech-item">Express.js</div>
+          <div class="tech-item">PostgreSQL 15</div>
+          <div class="tech-item">Redis 7</div>
+          <div class="tech-item">Docker</div>
+          <div class="tech-item">Kubernetes</div>
+          <div class="tech-item">JWT Auth</div>
+          <div class="tech-item">REST API</div>
+          <div class="tech-item">Nginx</div>
+          <div class="tech-item">Google Cloud</div>
+        </div>
+      </div>
+
+      <!-- Kubernetes Deployment -->
+      <div class="data-flow">
+        <div class="flow-title">☸️ Kubernetes Deployment Architecture</div>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <span class="step-number">📦</span>
+            <strong>Pods:</strong> Each microservice runs in separate pods with
+            health checks
+          </div>
+          <div class="flow-step">
+            <span class="step-number">🔗</span>
+            <strong>Services:</strong> ClusterIP services for internal
+            communication
+          </div>
+          <div class="flow-step">
+            <span class="step-number">📡</span>
+            <strong>Ingress:</strong> Nginx ingress controller for external
+            traffic routing
+          </div>
+          <div class="flow-step">
+            <span class="step-number">🗄️</span>
+            <strong>Persistent Volumes:</strong> PostgreSQL data persistence
+            across pod restarts
+          </div>
+          <div class="flow-step">
+            <span class="step-number">🔐</span>
+            <strong>ConfigMaps & Secrets:</strong> Environment variables and
+            sensitive data management
+          </div>
+          <div class="flow-step">
+            <span class="step-number">📈</span>
+            <strong>Auto-scaling:</strong> Horizontal Pod Autoscaler for dynamic
+            scaling
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Add dynamic arrows and animations
+      document.addEventListener("DOMContentLoaded", function () {
+        const svg = document.querySelector("svg");
+
+        // Create workflow arrows
+        const arrows = [
+          {
+            from: "user-component",
+            to: "frontend-component",
+            label: "1. User Clicks",
+            color: "#e74c3c",
+            offset: { x: 0, y: 0 },
+          },
+          {
+            from: "frontend-component",
+            to: "gateway-component",
+            label: "2. API Request",
+            color: "#3498db",
+            offset: { x: 50, y: 0 },
+          },
+          {
+            from: "gateway-component",
+            to: "user-service",
+            label: "3. Auth Check",
+            color: "#f39c12",
+            offset: { x: 0, y: 30 },
+          },
+          {
+            from: "gateway-component",
+            to: "todo-service",
+            label: "4. Route Request",
+            color: "#2ecc71",
+            offset: { x: 0, y: 50 },
+          },
+          {
+            from: "todo-service",
+            to: "postgres-component",
+            label: "5. SQL Query",
+            color: "#9b59b6",
+            offset: { x: 50, y: 0 },
+          },
+          {
+            from: "notification-service",
+            to: "redis-component",
+            label: "6. Cache/Queue",
+            color: "#e67e22",
+            offset: { x: 50, y: 0 },
+          },
+        ];
+
+        // Function to get element center position
+        function getElementCenter(elementId) {
+          const element = document.getElementById(elementId);
+          const rect = element.getBoundingClientRect();
+          const containerRect = svg.getBoundingClientRect();
+          return {
+            x: rect.left - containerRect.left + rect.width / 2,
+            y: rect.top - containerRect.top + rect.height / 2,
+          };
+        }
+
+        // Create arrow lines and labels
+        arrows.forEach((arrow, index) => {
+          const fromPos = getElementCenter(arrow.from);
+          const toPos = getElementCenter(arrow.to);
+
+          // Adjust positions with offset
+          fromPos.x += arrow.offset.x;
+          fromPos.y += arrow.offset.y;
+
+          // Create curved path
+          const midX = (fromPos.x + toPos.x) / 2;
+          const midY = (fromPos.y + toPos.y) / 2 - 30; // Curve upward
+
+          const path = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "path"
+          );
+          path.setAttribute(
+            "d",
+            `M ${fromPos.x} ${fromPos.y} Q ${midX} ${midY} ${toPos.x} ${toPos.y}`
+          );
+          path.setAttribute("stroke", arrow.color);
+          path.setAttribute("stroke-width", "3");
+          path.setAttribute("fill", "none");
+          path.setAttribute("marker-end", "url(#arrowhead-" + index + ")");
+          path.setAttribute("opacity", "0.8");
+
+          // Create custom arrowhead for each color
+          const marker = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "marker"
+          );
+          marker.setAttribute("id", "arrowhead-" + index);
+          marker.setAttribute("markerWidth", "10");
+          marker.setAttribute("markerHeight", "7");
+          marker.setAttribute("refX", "9");
+          marker.setAttribute("refY", "3.5");
+          marker.setAttribute("orient", "auto");
+
+          const polygon = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "polygon"
+          );
+          polygon.setAttribute("points", "0 0, 10 3.5, 0 7");
+          polygon.setAttribute("fill", arrow.color);
+
+          marker.appendChild(polygon);
+          svg.querySelector("defs").appendChild(marker);
+          svg.appendChild(path);
+
+          // Create label
+          const label = document.createElement("div");
+          label.className = "arrow-label";
+          label.textContent = arrow.label;
+          label.style.position = "absolute";
+          label.style.left = midX + "px";
+          label.style.top = midY - 20 + "px";
+          label.style.backgroundColor = arrow.color;
+          label.style.transform = "translateX(-50%)";
+          label.style.zIndex = "10";
+          document.querySelector(".container").appendChild(label);
+
+          // Add animation delay
+          setTimeout(() => {
+            path.style.strokeDasharray = path.getTotalLength();
+            path.style.strokeDashoffset = path.getTotalLength();
+            path.style.animation = `drawLine 2s ease-in-out ${
+              index * 0.5
+            }s forwards`;
+          }, 100);
+        });
+
+        // Add CSS animation
+        const style = document.createElement("style");
+        style.textContent = `
+                @keyframes drawLine {
+                    to {
+                        stroke-dashoffset: 0;
+                    }
+                }
+                
+                .arrow-label {
+                    animation: fadeIn 0.5s ease-in-out forwards;
+                    opacity: 0;
+                    animation-delay: 1s;
+                }
+                
+                @keyframes fadeIn {
+                    to {
+                        opacity: 1;
+                    }
+                }
+                
+                .component:hover {
+                    transform: translateY(-5px) scale(1.05);
+                    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+                }
+            `;
+        document.head.appendChild(style);
+      });
+    </script>
+  </body>
+</html>
