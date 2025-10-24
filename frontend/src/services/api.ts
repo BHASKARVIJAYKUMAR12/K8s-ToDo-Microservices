@@ -8,21 +8,62 @@ import {
   AuthResponse,
 } from "../types";
 
+// Use environment variable or default to localhost:8080 for local development
 const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:8080/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 // Add auth token to requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("authToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
+
+// Handle authentication errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // If 401 or 403, token is invalid - clear it and redirect to login
+    if (
+      error.response &&
+      (error.response.status === 401 || error.response.status === 403)
+    ) {
+      console.error(
+        "Authentication error:",
+        error.response.status,
+        error.response.data
+      );
+
+      // Clear invalid token
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("user");
+
+      // Only redirect if not already on auth pages
+      if (
+        !window.location.pathname.includes("/login") &&
+        !window.location.pathname.includes("/register")
+      ) {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Auth Service
 export const authService = {

@@ -1,0 +1,7 @@
+# Namespace for Todo Application
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: todo-app
+  labels:
+    name: todo-app

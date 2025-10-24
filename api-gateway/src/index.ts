@@ -13,10 +13,40 @@ const PORT = process.env.PORT || 8080;
 
 // Security middleware
 app.use(helmet());
+
+// CORS configuration - simplified and environment-aware
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : [
+      "http://localhost:3000", // Local React dev server
+      "http://frontend-service", // Kubernetes service name
+      "http://frontend-service:80", // Kubernetes service with port
+    ];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, curl, or Postman)
+      if (!origin) return callback(null, true);
+
+      // In development mode, allow all origins
+      if (process.env.NODE_ENV === "development") {
+        return callback(null, true);
+      }
+
+      // Check if origin is in allowed list
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+    maxAge: 600, // Cache preflight for 10 minutes
   })
 );
 
@@ -157,7 +187,11 @@ app.listen(PORT, () => {
   console.log(`👤 User Service: ${USER_SERVICE_URL}`);
   console.log(`📢 Notification Service: ${NOTIFICATION_SERVICE_URL}`);
   console.log(
-    `🌐 Frontend URL: ${process.env.FRONTEND_URL || "http://localhost:3000"}`
+    `🌐 Frontend URL: ${
+      process.env.FRONTEND_URL ||
+      "http://localhost:3000" ||
+      "http://localhost:32396"
+    }`
   );
 });
 

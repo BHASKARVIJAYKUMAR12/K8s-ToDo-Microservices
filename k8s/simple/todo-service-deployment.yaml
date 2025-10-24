@@ -1,0 +1,88 @@
+# Todo Service Deployment
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-service-config
+  namespace: todo-app
+data:
+  PORT: "3001"
+  NODE_ENV: "production"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: "todoapp"
+  DB_USER: "postgres"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: todo-service-secret
+  namespace: todo-app
+type: Opaque
+stringData:
+  DB_PASSWORD: "password"
+  JWT_SECRET: "local-dev-secret-key-change-in-production"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-service
+  namespace: todo-app
+  labels:
+    app: todo-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo-service
+  template:
+    metadata:
+      labels:
+        app: todo-service
+    spec:
+      containers:
+        - name: todo-service
+          image: todo-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3001
+              name: http
+          envFrom:
+            - configMapRef:
+                name: todo-service-config
+            - secretRef:
+                name: todo-service-secret
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-service
+  namespace: todo-app
+  labels:
+    app: todo-service
+spec:
+  selector:
+    app: todo-service
+  ports:
+    - port: 3001
+      targetPort: 3001
+      protocol: TCP
+  type: ClusterIP
